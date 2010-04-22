@@ -1,0 +1,17 @@
+--- #YAML:1.0
+name:                Business-EDI
+version:             0.01
+abstract:            Top level generator of U.N. EDI objects
+license:             ~
+author:              
+    - Joe Atzberger (atz@esilibrary.com)
+generated_by:        ExtUtils::MakeMaker version 6.42
+distribution_type:   module
+requires:     
+    Exporter::Easy:                0.14
+    JSON::XS:                      2.01
+    Test::Simple:                  0.88
+    UNIVERSAL::require:            0.1
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3
