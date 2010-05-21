@@ -3,7 +3,7 @@
 
 use strict; use warnings;
 
-use Test::More tests => 32;
+use Test::More tests => 33;
 
 BEGIN {
     use_ok('Data::Dumper');
@@ -29,11 +29,12 @@ my $data = {
 
 $Data::Dumper::Indent = 1;
 
-use vars qw/%code_hash $bgm $codemap/;
+use vars qw/%code_hash $bgm $codemap $edi/;
 
 note "data: " . Dumper($data);
 
-ok($bgm = Business::EDI::Segment::BGM->new($data), 'Business::EDI::Segment::BGM->new');
+ok($edi = Business::EDI->new('d08a'),  'Business::EDI->new("d08a")');
+ok($bgm = $edi->segment('BGM', $data), 'edi->segment("BGM", ...)');
 $verbose and print "BGM: ",          Dumper($bgm);
 $verbose and print "BGM->seg4343: ", Dumper($bgm->seg4343);
 ok($bgm->seg4343, "seg4343 Autoload accessor");
@@ -48,27 +49,19 @@ ok($codemap = $bgm->seg4343->codemap, "Business::EDI::Segment::BGM->new(...)->se
 
 foreach my $key (keys %$data) {
     my ($msgtype);
-    ok($msgtype = Business::EDI->subelement({$key => $data->{$key}}),
-        "Business::EDI->subelement({$key => $data->{$key}}): Code $key recognized"
+    ok($msgtype = $edi->subelement({$key => $data->{$key}}),
+                  "edi->subelement({$key => $data->{$key}}): Code $key recognized"
     );
     note "ref(subelement): " . ref($msgtype);
     if ($key eq 'C002') {
-        TODO: {
-            todo_skip "Unimplemented - direct access to unique element grouped under Composite", 1;
-            ok($msgtype->part(1001), "Extra test for direct access to element grouped under C002");
-        }
+        ok($msgtype->part(1001), "Extra test for direct access to element (1001) grouped under C002");
     }
-    is_deeply($msgtype, $bgm->part($key),        "Different constructor paths, identical object");
-    is($msgtype->code,  $bgm->part($key)->code , "Different constructor paths, same code");
-    is($msgtype->label, $bgm->part($key)->label, "Different constructor paths, same label");
-    is($msgtype->value, $bgm->part($key)->value, "Different constructor paths, same value");
+    is_deeply($msgtype, $bgm->part($key),        "Different constructor paths, identical object ($key)");
+    is($msgtype->code,  $bgm->part($key)->code , "Different constructor paths, same code ($key)");
+    is($msgtype->label, $bgm->part($key)->label, "Different constructor paths, same label ($key)");
+    is($msgtype->value, $bgm->part($key)->value, "Different constructor paths, same value ($key)");
     $verbose and note(ref($msgtype)  . ' dump: ' . Dumper($msgtype));
 }
-
-# ok($slurp = join('', <DATA>),     "Slurped data from DATA handle");
-
-# note("ref(\$obj): " . ref($perl));
-# note("    \$obj : " .     $perl );
 
 note("done");
 
