@@ -1,8 +1,8 @@
 package Business::EDI::CodeList::GeographicAreaCode;
 
 use base 'Business::EDI::CodeList';
-my $VERSION     = 0.01;
-my $list_number = 3279;
+my $VERSION     = 0.02;
+sub list_number {3279;}
 my $usage       = 'B';
 
 # 3279  Geographic area code                                    [B]
@@ -35,9 +35,9 @@ my %code_hash = (
 'SPB' => [ 'SEPA (Single Euro Payments Area) ID B',
     'SEPA message following scheme 2 as defined by EBA (EURO Banking Association).' ],
 'SPC' => [ 'SEPA (Single Euro Payments Area) ID C',
-    'SEPA message following scheme 3 as defined by EBA (EURO Banking 	Association).' ],
+    'SEPA message following scheme 3 as defined by EBA (EURO Banking Association).' ],
 'SPD' => [ 'SEPA (Single Euro Payments Area) ID D',
-    'SEPA message following scheme 4 as defined by EBA (EURO Banking 	Association).' ],
+    'SEPA message following scheme 4 as defined by EBA (EURO Banking Association).' ],
 );
 sub get_codes { return \%code_hash; }
 

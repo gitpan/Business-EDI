@@ -17,6 +17,7 @@ do have a defined list of legal values.
 our $VERSION = 0.01;
 our $verbose = 0;
 our %codemap;
+my @fields = qw/ code value label desc /;
 
 sub new_codelist {      # constructor: NOT to be overridden, first argument is string name like 'ResponseTypeCode'
     my $class = shift;  # note: we don't return objects of this class, we return an object from the subclasses
@@ -46,7 +47,7 @@ sub new {       # override me if you want,
     # $code or return;
     my $self = bless({}, $class);
     unless ($self->init($code, @_)) {
-        carp $class . "->init failed for code '" . (defined($code) ? $code : '') . "'";
+        carp $class . "->init('" . (defined($code) ? $code : '') . "', " . join(", ",@_), ") FAILED\n";
         return;
     }
     return $self;
@@ -59,7 +60,8 @@ sub init {
     my $codes = $self->get_codes();    # from subobject
     $verbose and warn ref($self) . "->get_codes got " . scalar(keys %$codes) . ", setting value '$value'";
     $self->{value} = $value;
-    $self->{listnumber} = shift if @_;
+    $self->{code } = @_ ? shift : $self->list_number;
+    $self->{_permitted} = {(map {$_ => 1} @fields)};
     unless (length($value) and $codes->{$value}) {
         $verbose and carp "Value '$value' is not an authorized value";
         $self->{label} = '';
@@ -80,10 +82,10 @@ sub init {
 # }
 
 sub code       { my $self = shift; return $self->listnumber(@_); }
-sub listnumber { my $self = shift; @_ and $self->{listnumber} = shift; return $self->{listnumber}; }
-sub label      { my $self = shift; @_ and $self->{label}      = shift; return $self->{label};      }
-sub desc       { my $self = shift; @_ and $self->{desc }      = shift; return $self->{desc };      }
-sub value      { my $self = shift; @_ and $self->{value}      = shift; return $self->{value};      }
+sub listnumber { my $self = shift; @_ and $self->{code } = shift; return $self->{code }; }
+sub label      { my $self = shift; @_ and $self->{label} = shift; return $self->{label}; }
+sub desc       { my $self = shift; @_ and $self->{desc } = shift; return $self->{desc }; }
+sub value      { my $self = shift; @_ and $self->{value} = shift; return $self->{value}; }
 
 sub name2number {
     my $self = shift;
@@ -98,6 +100,139 @@ sub name2number {
 sub codemap {
     my $self = shift;
     %codemap or %codemap = (
+# These (0xxx) are from SYNTAX spec
+        '0001' => q(SyntaxIdentifier),
+        '0002' => q(SyntaxVersionNumber),
+        '0004' => q(InterchangeSenderIdentification),
+        '0007' => q(IdentificationCodeQualifier),
+        '0008' => q(InterchangeSenderInternalIdentification),
+        '0010' => q(InterchangeRecipientIdentification),
+        '0014' => q(InterchangeRecipientInternalIdentification),
+        '0017' => q(Date),
+        '0019' => q(Time),
+        '0020' => q(InterchangeControlReference),
+        '0022' => q(RecipientReferencePassword),
+        '0025' => q(RecipientReferencePasswordQualifier),
+        '0026' => q(ApplicationReference),
+        '0029' => q(ProcessingPriorityCode),
+        '0031' => q(AcknowledgementRequest),
+        '0032' => q(InterchangeAgreementIdentifier),
+        '0035' => q(TestIndicator),
+        '0036' => q(InterchangeControlCount),
+        '0038' => q(MessageGroupIdentification),
+        '0040' => q(ApplicationSenderIdentification),
+        '0042' => q(InterchangeSenderInternalSubidentification),
+        '0044' => q(ApplicationRecipientIdentification),
+        '0046' => q(InterchangeRecipientInternalSubidentification),
+        '0048' => q(GroupReferenceNumber),
+        '0051' => q(ControllingAgencyCoded),
+        '0052' => q(MessageVersionNumber),
+        '0054' => q(MessageReleaseNumber),
+        '0057' => q(AssociationAssignedCode),
+        '0058' => q(ApplicationPassword),
+        '0060' => q(GroupControlCount),
+        '0062' => q(MessageReferenceNumber),
+        '0065' => q(MessageType),
+        '0068' => q(CommonAccessReference),
+        '0070' => q(SequenceOfTransfers),
+        '0073' => q(FirstAndLastTransfer),
+        '0074' => q(NumberOfSegmentsInAMessage),
+        '0076' => q(SyntaxReleaseNumber),
+        '0080' => q(ServiceCodeListDirectoryVersionNumber),
+        '0081' => q(SectionIdentification),
+        '0083' => q(ActionCoded),
+        '0085' => q(SyntaxErrorCoded),
+        '0087' => q(AnticollisionSegmentGroupIdentification),
+        '0096' => q(SegmentPositionInMessageBody),
+        '0098' => q(ErroneousDataElementPositionInSegment),
+        '0104' => q(ErroneousComponentDataElementPosition),
+        '0110' => q(CodeListDirectoryVersionNumber),
+        '0113' => q(MessageTypeSubfunctionIdentification),
+        '0115' => q(MessageSubsetIdentification),
+        '0116' => q(MessageSubsetVersionNumber),
+        '0118' => q(MessageSubsetReleaseNumber),
+        '0121' => q(MessageImplementationGuidelineIdentification),
+        '0122' => q(MessageImplementationGuidelineVersionNumber),
+        '0124' => q(MessageImplementationGuidelineReleaseNumber),
+        '0127' => q(ScenarioIdentification),
+        '0128' => q(ScenarioVersionNumber),
+        '0130' => q(ScenarioReleaseNumber),
+        '0133' => q(CharacterEncodingCoded),
+        '0135' => q(ServiceSegmentTagCoded),
+        '0136' => q(ErroneousDataElementOccurrence),
+        '0138' => q(SecuritySegmentPosition),
+        '0300' => q(InitiatorControlReference),
+        '0303' => q(InitiatorReferenceIdentification),
+        '0304' => q(ResponderControlReference),
+        '0306' => q(TransactionControlReference),
+        '0311' => q(DialogueIdentification),
+        '0314' => q(EventTime),
+        '0320' => q(SenderSequenceNumber),
+        '0323' => q(TransferPositionCoded),
+        '0325' => q(DuplicateIndicator),
+        '0331' => q(ReportFunctionCoded),
+        '0332' => q(Status),
+        '0333' => q(StatusCoded),
+        '0335' => q(LanguageCoded),
+        '0336' => q(TimeOffset),
+        '0338' => q(EventDate),
+        '0340' => q(InteractiveMessageReferenceNumber),
+        '0342' => q(DialogueVersionNumber),
+        '0344' => q(DialogueReleaseNumber),
+        '0501' => q(SecurityServiceCoded),
+        '0503' => q(ResponseTypeCoded),
+        '0505' => q(FilterFunctionCoded),
+        '0507' => q(OriginalCharacterSetEncodingCoded),
+        '0509' => q(RoleOfSecurityProviderCoded),
+        '0511' => q(SecurityPartyIdentification),
+        '0513' => q(SecurityPartyCodeListQualifier),
+        '0515' => q(SecurityPartyCodeListResponsibleAgencyCoded),
+        '0517' => q(DateAndTimeQualifier),
+        '0518' => q(EncryptionReferenceNumber),
+        '0520' => q(SecuritySequenceNumber),
+        '0523' => q(UseOfAlgorithmCoded),
+        '0525' => q(CryptographicModeOfOperationCoded),
+        '0527' => q(AlgorithmCoded),
+        '0529' => q(AlgorithmCodeListIdentifier),
+        '0531' => q(AlgorithmParameterQualifier),
+        '0533' => q(ModeOfOperationCodeListIdentifier),
+        '0534' => q(SecurityReferenceNumber),
+        '0536' => q(CertificateReference),
+        '0538' => q(KeyName),
+        '0541' => q(ScopeOfSecurityApplicationCoded),
+        '0543' => q(CertificateOriginalCharacterSetRepertoireCoded),
+        '0545' => q(CertificateSyntaxAndVersionCoded),
+        '0546' => q(UserAuthorisationLevel),
+        '0548' => q(ServiceCharacterForSignature),
+        '0551' => q(ServiceCharacterForSignatureQualifier),
+        '0554' => q(AlgorithmParameterValue),
+        '0556' => q(LengthOfDataInOctetsOfBits),
+        '0558' => q(ListParameter),
+        '0560' => q(ValidationValue),
+        '0563' => q(ValidationValueQualifier),
+        '0565' => q(MessageRelationCoded),
+        '0567' => q(SecurityStatusCoded),
+        '0569' => q(RevocationReasonCoded),
+        '0571' => q(SecurityErrorCoded),
+        '0572' => q(CertificateSequenceNumber),
+        '0575' => q(ListParameterQualifier),
+        '0577' => q(SecurityPartyQualifier),
+        '0579' => q(KeyManagementFunctionQualifier),
+        '0582' => q(NumberOfPaddingBytes),
+        '0586' => q(SecurityPartyName),
+        '0588' => q(NumberOfSecuritySegments),
+        '0591' => q(PaddingMechanismCoded),
+        '0601' => q(PaddingMechanismCodeListIdentifier),
+        '0800' => q(PackageReferenceNumber),
+        '0802' => q(ReferenceIdentificationNumber),
+        '0805' => q(ObjectTypeQualifier),
+        '0808' => q(ObjectTypeAttribute),
+        '0809' => q(ObjectTypeAttributeIdentification),
+        '0810' => q(LengthOfObjectInOctetsOfBits),
+        '0813' => q(ReferenceQualifier),
+        '0814' => q(NumberOfSegmentsBeforeObject),
+
+# The rest are from regular EDI spec
         1001 => "DocumentNameCode",
         1049 => "MessageSectionCode",
         1073 => "DocumentLineActionCode",
@@ -105,7 +240,7 @@ sub codemap {
         1159 => "SequenceIdentifierSourceCode",
         1225 => "MessageFunctionCode",
         1227 => "CalculationSequenceCode",
-        1229 => "ActionRequest/notificationDescriptionCode",
+        1229 => "ActionCode",
         1373 => "DocumentStatusCode",
         1501 => "ComputerEnvironmentDetailsCodeQualifier",
         1503 => "DataFormatDescriptionCode",
@@ -190,7 +325,7 @@ sub codemap {
         4455 => "BackOrderArrangementTypeCode",
         4457 => "SubstitutionConditionCode",
         4461 => "PaymentMeansCode",
-        4463 => "Intra-companyPaymentIndicatorCode",
+        4463 => "IntracompanyPaymentIndicatorCode",
         4465 => "AdjustmentReasonDescriptionCode",
         4471 => "SettlementMeansCode",
         4475 => "AccountingEntryTypeNameCode",
@@ -215,7 +350,7 @@ sub codemap {
         5125 => "PriceCodeQualifier",
         5153 => "DutyOrTaxOrFeeTypeNameCode",
         5189 => "AllowanceOrChargeIdentificationCode",
-        5213 => "Sub-lineItemPriceChangeOperationCode",
+        5213 => "SublineItemPriceChangeOperationCode",
         5237 => "ChargeCategoryCode",
         5243 => "RateOrTariffClassDescriptionCode",
         5245 => "PercentageTypeCodeQualifier",
@@ -232,7 +367,7 @@ sub codemap {
         5393 => "PriceMultiplierTypeCodeQualifier",
         5419 => "RateTypeCodeQualifier",
         5463 => "AllowanceOrChargeCodeQualifier",
-        5495 => "Sub-lineIndicatorCode",
+        5495 => "SublineIndicatorCode",
         5501 => "RatePlanCode",
         6029 => "GeographicalPositionCodeQualifier",
         6063 => "QuantityTypeCodeQualifier",
@@ -243,7 +378,7 @@ sub codemap {
         6085 => "DosageAdministrationCodeQualifier",
         6087 => "ResultValueTypeCodeQualifier",
         6145 => "DimensionTypeCodeQualifier",
-        6155 => "Non-discreteMeasurementNameCode",
+        6155 => "NondiscreteMeasurementNameCode",
         6167 => "RangeTypeCodeQualifier",
         6173 => "SizeTypeCodeQualifier",
         6245 => "TemperatureTypeCodeQualifier",
